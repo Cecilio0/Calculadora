@@ -89,7 +89,7 @@ public class CalculatorGUI extends JFrame {
         } else if (label.equals("C") || label.equals("DEL")) {
             button.setBackground(new Color(244, 67, 54)); // Red
             button.setForeground(Color.WHITE);
-        } else if ("/%+-^".contains(label) || label.equals("+/-") || label.equals("root") || 
+        } else if ("/%+-^*".contains(label) || label.equals("+/-") || label.equals("root") || 
                    label.equals("!") || label.equals("fib") || label.equals("mcm") || 
                    label.equals("mcd") || label.equals("sin") || label.equals("cos") || 
                    label.equals("tan")) {
@@ -116,54 +116,59 @@ public class CalculatorGUI extends JFrame {
     private void handleButtonClick(String label) {
         String result;
 
-        switch (label) {
-            case "C":
-                result = calculator.clear();
-                break;
-            case "DEL":
-                result = calculator.delete();
-                break;
-            case "%":
-                result = calculator.percentage();
-                break;
-            case "/":
-            case "*":
-            case "-":
-            case "+":
-                result = calculator.handleOperation(label);
-                break;
-            case "^":
-                result = calculator.handleOperation("^");
-                break;
-            case "root":
-                result = calculator.handleOperation("root");
-                break;
-            case "mcm":
-                result = calculator.handleOperation("mcm");
-                break;
-            case "mcd":
-                result = calculator.handleOperation("mcd");
-                break;
-            case "=":
-                result = calculator.calculateResult();
-                break;
-            case ".":
-                result = calculator.handleDecimal();
-                break;
-            case "+/-":
-                result = calculator.toggleSign();
-                break;
-            case "sin":
-            case "cos":
-            case "tan":
-            case "!":
-            case "fib":
-                result = calculator.applySingleOperation(label);
-                break;
-            default:
-                // Number button
-                result = calculator.handleNumberClick(label);
-                break;
+        try {
+            switch (label) {
+                case "C":
+                    result = calculator.clear();
+                    break;
+                case "DEL":
+                    result = calculator.delete();
+                    break;
+                case "%":
+                    result = calculator.percentage();
+                    break;
+                case "/":
+                case "*":
+                case "-":
+                case "+":
+                    result = calculator.handleOperation(label);
+                    break;
+                case "^":
+                    result = calculator.handleOperation("^");
+                    break;
+                case "root":
+                    result = calculator.handleOperation("root");
+                    break;
+                case "mcm":
+                    result = calculator.handleOperation("mcm");
+                    break;
+                case "mcd":
+                    result = calculator.handleOperation("mcd");
+                    break;
+                case "=":
+                    result = calculator.calculateResult();
+                    break;
+                case ".":
+                    result = calculator.handleDecimal();
+                    break;
+                case "+/-":
+                    result = calculator.toggleSign();
+                    break;
+                case "sin":
+                case "cos":
+                case "tan":
+                case "!":
+                case "fib":
+                    result = calculator.applySingleOperation(label);
+                    break;
+                default:
+                    // Number button
+                    result = calculator.handleNumberClick(label);
+                    break;
+            }
+        } catch (ArithmeticException ex) {
+            result = "Error: " + ex.getMessage();
+            calculator.clear(); // Clear calculator state on error
         }
 
         display.setText(result);
@@ -172,11 +177,33 @@ public class CalculatorGUI extends JFrame {
     // Custom Display Panel
     private static class JDisplay extends JPanel {
         private String text = "0";
-        private Font font = new Font("Arial", Font.BOLD, 48);
+        private Font defaultFont = new Font("Arial", Font.BOLD, 48);
+        private Font currentFont = defaultFont;
 
         public void setText(String text) {
             this.text = text;
+            adjustFontSize();
             repaint();
+        }
+
+        private void adjustFontSize() {
+            // Calculate appropriate font size based on text length
+            int textLength = text.length();
+            int fontSize;
+            
+            if (textLength <= 10) {
+                fontSize = 48; // Default size for normal numbers
+            } else if (textLength <= 15) {
+                fontSize = 36; // Medium size
+            } else if (textLength <= 20) {
+                fontSize = 28; // Smaller for longer text
+            } else if (textLength <= 30) {
+                fontSize = 22; // Even smaller for error messages
+            } else {
+                fontSize = 18; // Smallest size for very long messages
+            }
+            
+            currentFont = new Font("Arial", Font.BOLD, fontSize);
         }
 
         @Override
@@ -188,12 +215,11 @@ public class CalculatorGUI extends JFrame {
             g2.setColor(new Color(30, 30, 30));
             g2.fillRect(0, 0, getWidth(), getHeight());
 
-            g2.setFont(font);
+            g2.setFont(currentFont);
             g2.setColor(Color.WHITE);
 
             FontMetrics fm = g2.getFontMetrics();
             int textWidth = fm.stringWidth(text);
-            int textHeight = fm.getAscent();
 
             int x = getWidth() - textWidth - 20;
             int y = getHeight() - 20;

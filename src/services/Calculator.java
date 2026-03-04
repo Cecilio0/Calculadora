@@ -1,11 +1,13 @@
 package services;
 
 public class Calculator {
-    private double firstNumber = 0;
-    private double secondNumber = 0;
-    private String operation = "";
-    private boolean isNewNumber = true;
-    private String display = "0";
+    // Two-stage state machine: isNewNumber=true means next digit replaces display,
+    // isNewNumber=false means next digit appends. This enables natural chained operations.
+    private double firstNumber = 0;      // First operand in pending binary operation
+    private double secondNumber = 0;     // Second operand
+    private String operation = "";       // Pending operation (+, -, *, /, ^, root, mcm, mcd)
+    private boolean isNewNumber = true;  // Is next digit starting a new number?
+    private String display = "0";        // What the user sees on screen
 
     public String handleNumberClick(String number) {
         if (isNewNumber) {
@@ -34,15 +36,17 @@ public class Calculator {
     public String handleOperation(String op) {
         try {
             if (!operation.isEmpty() && !isNewNumber) {
-                // Calculate the result of the previous operation
+                // KEY: Chained operation - enables "5 + 3 + 2 =" to work naturally
+                // If user just entered a number and there's a pending operation,
+                // calculate intermediate result NOW before storing the new operation
                 secondNumber = Double.parseDouble(display);
                 firstNumber = calculate(firstNumber, secondNumber, operation);
                 display = formatNumber(firstNumber);
             } else {
                 firstNumber = Double.parseDouble(display);
             }
-            operation = op;
-            isNewNumber = true;
+            operation = op;      // Store operation for next calculation
+            isNewNumber = true;  // Next digit click will replace display
             return display;
         } catch (NumberFormatException e) {
             return "0";
@@ -187,6 +191,8 @@ public class Calculator {
     }
 
     public String delete() {
+        // Only allow deletion while entering current number (isNewNumber=false)
+        // Protects against accidentally deleting the first operand
         if (!isNewNumber && display.length() > 1) {
             display = display.substring(0, display.length() - 1);
         } else if (!isNewNumber && display.length() == 1) {
@@ -219,10 +225,13 @@ public class Calculator {
     }
 
     private String formatNumber(double num) {
+        // Display whole numbers without decimals, remove trailing zeros from decimals
         if (num == (long) num) {
-            return String.format("%d", (long) num);
+            return String.format("%d", (long) num);  // "2" not "2.0"
         } else {
-            return String.format("%.10f", num).replaceAll("0*$", "").replaceAll("\\.$", "");
+            return String.format("%.10f", num)
+                .replaceAll("0*$", "")        // Remove trailing zeros
+                .replaceAll("\\.$", "");     // Remove trailing decimal point
         }
     }
 

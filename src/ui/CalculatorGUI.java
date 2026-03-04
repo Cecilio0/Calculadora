@@ -44,10 +44,12 @@ public class CalculatorGUI extends JFrame {
 
     private JPanel createButtonPanel() {
         JPanel panel = new JPanel();
+        // GridLayout(8, 4, 5, 5): 8 rows × 4 columns with 5px gaps
+        // All 32 cells must be filled, including empty panels for proper grid alignment
         panel.setLayout(new GridLayout(8, 4, 5, 5));
         panel.setBackground(new Color(30, 30, 30));
 
-        // Define buttons
+        // Define buttons (last row intentionally has empty cells)
         String[][] buttonLabels = {
             {"sin", "cos", "tan", "/"},
             {"^", "root", "!", "fib"},
@@ -62,6 +64,7 @@ public class CalculatorGUI extends JFrame {
         for (String[] row : buttonLabels) {
             for (String label : row) {
                 if (label.isEmpty()) {
+                    // Empty panels maintain GridLayout structure (32 cells total)
                     JPanel emptyPanel = new JPanel();
                     emptyPanel.setBackground(new Color(30, 30, 30));
                     panel.add(emptyPanel);
@@ -187,7 +190,8 @@ public class CalculatorGUI extends JFrame {
         }
 
         private void adjustFontSize() {
-            // Calculate appropriate font size based on text length
+            // Adaptive font sizing: large numbers use large font, error messages use small font
+            // Prevents text overflow and maintains readability
             int textLength = text.length();
             int fontSize;
             
